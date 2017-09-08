@@ -1,3 +1,8 @@
+
+
+export JAVA_HOME= <path to java>
+export PATH= <add Java home>
+
 export SPARK_HOME=<your spark home path>
 export PATH=$SPARK_HOME/bin:$PATH
 
