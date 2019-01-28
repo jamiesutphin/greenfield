@@ -55,8 +55,6 @@ Resources:
           ScriptBootstrapAction:
             Path: !Ref Bootstrapscript
 
-
-
       Applications:
         - Name: Ganglia
         - Name: Hive
@@ -84,9 +82,7 @@ Resources:
       Name: !Ref EMRClusterName
       AutoScalingRole: EMR_AutoScaling_DefaultRole
       ServiceRole: !Ref EMRClusterServiceRole
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 494caabb-29f1-4111-98d7-b437d536156f
+
   EMRClusterServiceRole:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -102,9 +98,6 @@ Resources:
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceRole'
       Path: /
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 0f8fa4a4-98c5-4050-9f7c-2d77f2d31557
   EMRClusterinstanceProfileRole:
     Type: 'AWS::IAM::Role'
     Properties:
