@@ -1,13 +1,27 @@
+#!/bin/bash
+
+#Jamie jamiesutphin
+#DSS build to follow Emr CF stack create
+
 # Prerequisites
 # -------------------------
-# Dss license is found on an S3 bucket, configured
-# in Cloudformation parameter
+# Dss license is found on an S3 bucket, configured in CF parameter
+# This Bootstrap script is in the same S3 location as the CF parameter
 
-EMR_AWS_AZ=us-east-1c
 
-sudo su - ec2-user
+# only run on the master node
+IS_MASTER=$(curl http://169.254.169.254/latest/meta-data/security-groups | grep -i master)
+[[ -z $IS_MASTER ]] && exit 0
 
-aws configure set region us-east-1
+WHOAMI = $(/usr/bin/whoami)
+
+if [ ! $WHOAMI == "ec2-user" ] ; then
+  sudo su - ec2-user
+fi
+
+EMR_AWS_REGION=us-east-1
+EMR_AWS_AZ=$EMR_AWS_REGION"c"
+aws configure set region $EMR_AWS_REGION
 
 aws ec2 create-volume --size 32 --region us-east-1 --availability-zone $EMR_AWS_AZ --volume-type gp2 --tag-specifications 'ResourceType=volume,Tags=[{Key=purpose,Value=dss}]'
 
@@ -19,10 +33,6 @@ echo $INST
 
 
 aws ec2 attach-volume --volume-id $EBS_VOL --instance-id $INST --device /dev/sdf
-
-lsblk
-aws ec2 describe-volumes
-lsblk
 
 DATAIKU_BASE=/dataiku
 BLOCK_DEVICE=/dev/xvdf

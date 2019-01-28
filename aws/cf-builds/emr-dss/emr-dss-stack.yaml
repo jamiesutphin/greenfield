@@ -1,6 +1,10 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: Best Practice EMR Cluster for Spark
 Parameters:
+  Bootstrapscript:
+    Description: Full s3 path of bash Bootstrap
+    Default: s3://gbs3bucket1/emr_build_from_history.sh
+    Type: String
   AvailabilityZone:
     Description: Availability zone for stack
     Default: us-east-1c
@@ -46,6 +50,13 @@ Resources:
       - EMRClusterinstanceProfile
     Type: 'AWS::EMR::Cluster'
     Properties:
+      BootstrapActions:
+        - Name: dss Bootstrap
+          ScriptBootstrapAction:
+            Path: !Ref Bootstrapscript
+
+
+
       Applications:
         - Name: Ganglia
         - Name: Hive
