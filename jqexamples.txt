@@ -1,0 +1,22 @@
+aws --profile wma13 emr list-clusters | jq '.Clusters | .[] | . | select(.Status.State == "STARTING")'
+
+#Use boolean AND , OR filters
+
+aws --profile wma13 emr list-clusters | jq '.Clusters | .[] | . | select(.Status.State == "STARTING" and .Name == "emrcluster")'
+aws --profile wma13 emr list-clusters | jq '.Clusters | .[] | . | select((.Status.State == "STARTING" or .Status.State == "READY " ) and .Name == "emrcluster")'
+
+# Use Bash Variables
+# Make use of escape chars to parse literal "" when needed.
+# To use BAsh vars, you have to enclose the whole jq query in "", not '' ticks
+STATE=STARTING
+aws --profile wma13 emr list-clusters | jq ".Clusters | .[] | . | select((.Status.State == \"$STATE\"))"
+
+
+# use a test to return boolean
+STATE=STARTING
+aws --profile wma13 emr list-clusters | jq ".Clusters | .[] | . | select(.Status.State == \"$STATE\") | .Name | test(\"emrcluster\")"
+true
+
+
+# ebs - get a volume from a tag
+aws ec2 describe-volumes | jq ".Volumes | .[] | select(.Tags | .[] | .Value == \"dss\" ) .VolumeId"
