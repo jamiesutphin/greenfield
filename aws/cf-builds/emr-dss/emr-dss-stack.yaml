@@ -1,0 +1,121 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Best Practice EMR Cluster for Spark
+Parameters:
+  AvailabilityZone:
+    Description: Availability zone for stack
+    Default: us-east-1c
+    Type: 'AWS::EC2::AvailabilityZone::Name'
+  EMRClusterName:
+    Description: Name of the cluster
+    Type: String
+    Default: emrcluster
+  KeyName:
+    Description: Must be an existing Keyname
+    Type: String
+    Default: gb2kp
+  MasterInstanceType:
+    Description: Instance type to be used for the master instance.
+    Type: String
+    Default: m4.xlarge
+  CoreInstanceType:
+    Description: Instance type to be used for core instances.
+    Type: String
+    Default: m4.xlarge
+  NumberOfCoreInstances:
+    Description: Must be a valid number
+    Type: Number
+    Default: 2
+  SubnetID:
+    Description: Must be Valid public subnet ID
+    Default: subnet-0fd323072e5d3c33b
+    Type: String
+    AllowedValues:
+      - subnet-0c6c53e38eaf57811
+      - subnet-0fd323072e5d3c33b
+      - subnet-0937c541901c66e27
+  ReleaseLabel:
+    Description: Must be a valid EMR release  version
+    Default: emr-5.19.0
+    Type: String
+Mappings: {}
+Resources:
+  EMRCluster:
+    DependsOn:
+      - EMRClusterServiceRole
+      - EMRClusterinstanceProfileRole
+      - EMRClusterinstanceProfile
+    Type: 'AWS::EMR::Cluster'
+    Properties:
+      Applications:
+        - Name: Ganglia
+        - Name: Hive
+        - Name: Tez
+        - Name: Spark
+      Instances:
+        Ec2KeyName: !Ref KeyName
+        MasterInstanceGroup:
+
+          InstanceCount: 1
+          InstanceType: !Ref MasterInstanceType
+          Market: ON_DEMAND
+          Name: Master
+        CoreInstanceGroup:
+          InstanceCount: !Ref NumberOfCoreInstances
+          InstanceType: !Ref CoreInstanceType
+          Market: ON_DEMAND
+          Name: Core
+        TerminationProtected: false
+        Placement:
+          AvailabilityZone: !Ref AvailabilityZone
+      VisibleToAllUsers: true
+      JobFlowRole: !Ref EMRClusterinstanceProfile
+      ReleaseLabel: !Ref ReleaseLabel
+      Name: !Ref EMRClusterName
+      AutoScalingRole: EMR_AutoScaling_DefaultRole
+      ServiceRole: !Ref EMRClusterServiceRole
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 494caabb-29f1-4111-98d7-b437d536156f
+  EMRClusterServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - elasticmapreduce.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceRole'
+      Path: /
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 0f8fa4a4-98c5-4050-9f7c-2d77f2d31557
+  EMRClusterinstanceProfileRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforEC2Role'
+        - 'arn:aws:iam::aws:policy/AmazonEC2FullAccess'
+      Path: /
+
+  EMRClusterinstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: /
+      Roles:
+        - !Ref EMRClusterinstanceProfileRole
+
+Outputs: {}
