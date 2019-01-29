@@ -1,0 +1,117 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Dss Trial on EMR Cluster for Spark
+Parameters:
+  Bootstrapscript:
+    Description: Full s3 path of bash Bootstrap
+    Default: s3://gbs3bucket1/emr_build_from_history.sh
+    Type: String
+  EMRClusterName:
+    Description: Name of the cluster
+    Type: String
+    Default: Dna-DSS-Trial-Dev
+  KeyName:
+    Description: Must be an existing Keyname
+    Type: String
+    Default: gb2kp
+  MasterInstanceType:
+    Description: Instance type to be used for the master instance.
+    Type: String
+    Default: m4.xlarge
+  CoreInstanceType:
+    Description: Instance type to be used for core instances.
+    Type: String
+    Default: m4.xlarge
+  NumberOfCoreInstances:
+    Description: Must be a valid number
+    Type: Number
+    Default: 2
+  SubnetID:
+    Description: Must be Valid public subnet ID
+    Default: SN-Dna-Dbs1-D-1b
+    Type: String
+  ReleaseLabel:
+    Description: Must be a valid EMR release  version
+    Default: emr-5.19.0
+    Type: String
+Mappings: {}
+Resources:
+  EMRCluster:
+    DependsOn:
+      - EMRClusterServiceRole
+      - EMRClusterinstanceProfileRole
+      - EMRClusterinstanceProfile
+    Type: 'AWS::EMR::Cluster'
+    Properties:
+      BootstrapActions:
+        - Name: dss Bootstrap
+          ScriptBootstrapAction:
+            Path: !Ref Bootstrapscript
+
+      Applications:
+        - Name: Ganglia
+        - Name: Hive
+        - Name: Tez
+        - Name: Spark
+      Instances:
+        Ec2KeyName: !Ref KeyName
+        Ec2SubnetId: !Ref SubnetID
+        MasterInstanceGroup:
+
+          InstanceCount: 1
+          InstanceType: !Ref MasterInstanceType
+          Market: ON_DEMAND
+          Name: Master
+        CoreInstanceGroup:
+          InstanceCount: !Ref NumberOfCoreInstances
+          InstanceType: !Ref CoreInstanceType
+          Market: ON_DEMAND
+          Name: Core
+        TerminationProtected: false
+
+      VisibleToAllUsers: true
+      JobFlowRole: !Ref EMRClusterinstanceProfile
+      ReleaseLabel: !Ref ReleaseLabel
+      Name: !Ref EMRClusterName
+      AutoScalingRole: EMR_AutoScaling_DefaultRole
+      ServiceRole: !Ref EMRClusterServiceRole
+
+  EMRClusterServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - elasticmapreduce.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceRole'
+      Path: /
+  EMRClusterinstanceProfileRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforEC2Role'
+        - 'arn:aws:iam::aws:policy/AmazonEC2FullAccess'
+      Path: /
+
+  EMRClusterinstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: /
+      Roles:
+        - !Ref EMRClusterinstanceProfileRole
+
+Outputs: {}
