@@ -8,16 +8,10 @@
 # Dss license is found on an S3 bucket, configured in CF parameter
 # This Bootstrap script is in the same S3 location as the CF parameter
 
-set -x 
-
-sudo yum update -yes
-sudo yum install jq -yes
 
 # only run on the master node
 IS_MASTER=$(curl http://169.254.169.254/latest/meta-data/security-groups | grep -i master)
-echo $IS_MASTER
-
-## [[ -z $IS_MASTER ]] && exit 0
+[[ -z $IS_MASTER ]] && exit 0
 
 WHOAMI=$(/usr/bin/whoami)
 
@@ -29,39 +23,21 @@ EMR_AWS_REGION=us-east-1
 EMR_AWS_AZ=$(curl http://169.254.169.254/latest/meta-data/placement/availability-zone)
 aws configure set region $EMR_AWS_REGION
 
-TEMPJSON=/tmp/out.json
+aws ec2 create-volume --size 20 --region us-east-1 --availability-zone $EMR_AWS_AZ --volume-type gp2 --tag-specifications 'ResourceType=volume,Tags=[{Key=purpose,Value=dss}]'
 
-aws ec2 create-volume --size 10 --region us-east-1 --availability-zone $EMR_AWS_AZ --volume-type gp2 --tag-specifications 'ResourceType=volume,Tags=[{Key=purpose,Value=dss}]' > $TEMPJSON
-
-sleep 5
-EBS_VOL=$(jq ".VolumeId" $TEMPJSON | sed -r s/\"//g) 
-echo $EBS_VOL
 #wait for ebs volume
-sleep 35
+sleep 30
 
-#wait for creation
-#EBS_VOL=
-#if [ -z $EBS_VOL ] ; then
-	EBS_VOL=$(jq ".VolumeId " $TEMPJSON | sed -r s/\"//g) 
-	# EBS_VOL=$(aws ec2 describe-volumes | jq ".Volumes | .[] | select(.Tags | .[] | .Value == \"dss\" ) .VolumeId" | sed -r s/\"//g)
-#	sleep 15
-#fi
+EBS_VOL=$(aws ec2 describe-volumes | jq ".Volumes | .[] | select(.Tags | .[] | .Value == \"dss\" ) .VolumeId" | sed -r s/\"//g)
 
 INST=$(curl http://169.254.169.254/latest/meta-data/instance-id)
 echo $INST
 
-sleep 5
-BLOCK_DEVICE=/dev/xvdf
-aws ec2 attach-volume --volume-id $EBS_VOL --instance-id $INST --device $BLOCK_DEVICE 
+aws ec2 attach-volume --volume-id $EBS_VOL --instance-id $INST --device /dev/sdf
 
-#####
-exit 0 
-
-sleep 15
 DATAIKU_BASE=/dataiku
+BLOCK_DEVICE=/dev/xvdf
 DSS_DATA_DIR=/dataiku/data
-sleep 5
-
 sudo file -s $BLOCK_DEVICE
 sudo mkfs -t xfs $BLOCK_DEVICE
 sudo mkdir $DATAIKU_BASE
@@ -69,7 +45,7 @@ sudo mount $BLOCK_DEVICE $DATAIKU_BASE
 sudo chown -R ec2-user $DATAIKU_BASE
 mkdir $DSS_DATA_DIR
 
-sleep 5
+
 
 DATAIKU_VERSION=dataiku-dss-5.0.3
 LICENSE_FILENAME=license-ov5kgakw.json
