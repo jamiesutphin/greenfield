@@ -1,0 +1,31 @@
+{
+  "content": {
+    "licensee": {
+      "firstName": "Brooke",
+      "lastName": "Jones",
+      "email": "brooke@webbmasonanalytics.com",
+      "company": "Webbmason"
+    },
+    "instanceId": "mxomhan2",
+    "licenseKind": "CUSTOMER_EVAL",
+    "licenseId": "ocz7ePQ96wvOAtcV",
+    "properties": {
+      "features.security.multiUserSecurity": "true",
+      "emittedBy": "cloudadmin (lmattioni)",
+      "features.engines.spark": "true",
+      "features.engines.sparkMLLib": "true",
+      "features.apinode": "true",
+      "features.automationServer": "true",
+      "automationFeaturesVersion": "2018-1",
+      "features.security.ldap": "true",
+      "features.automation2018": "true",
+      "emittedOn": "20190123",
+      "features.security.hadoopKerberos": "true",
+      "features.security.sso": "true"
+    },
+    "expiresOn": "20190228"
+  },
+  "r1Sig": "aGGa8jwAezlAJVN51RpI8eh5aml/AN3XMVM0+2JKAUZHavTbHOc4GUcvoyNQx6qojV68xqBga3hDJP/wnGIITgFsw2BycC6KvyZ95xFyouxDubKJNZ0bGMEnMBiVVmKy3nsiUJcosBjo1bvme3DFHZUSAwTaUOldJZiKRNK3DhU\u003d",
+  "r1Pub": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDqyiqepcWLOnxAX+nuRvTeapLJ3sAWJ0DCtJjrraYnrTSwbVZJ5Xu5ZPukb99mxq45z3jux6ljlmdMlo0/hRwKLHEIjzK7B+XGSJYBcSfcUEe8ENcHV7ZW5PSpxYWWq2h+aA/xpsA3vvM1DWxdgSUErnY2kaZe2X2nStQHlpwBmwIDAQAB",
+  "r1PubSig": "OG7+Ke0UY+poOjCVj43krxo5uqHZ/Itrh27rIwlRhIzBsWvxjTGThDDaaNhwxTwDCjenX5rdCkYqrauD0ztE2Y7iBDSgO7PkzgVW+KFdRrYM+zsEr7nsGfhgdDVQnCUetD4kOxbaqCl7LDo0DXaT+bZGdiNjyiq3ByslIEA5QQ8\u003d"
+}
