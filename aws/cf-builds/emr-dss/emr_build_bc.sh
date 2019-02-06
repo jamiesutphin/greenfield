@@ -19,11 +19,8 @@ echo $IS_MASTER
 
 [[ -z $IS_MASTER ]] && exit 0
 
-WHOAMI=$(/usr/bin/whoami)
+/usr/bin/whoami
 
-if [ ! "$WHOAMI" == "ec2-user" ] ; then
-  sudo su - ec2-user
-fi
 
 EMR_AWS_REGION=us-east-1
 EMR_AWS_AZ=$(curl http://169.254.169.254/latest/meta-data/placement/availability-zone)
@@ -31,7 +28,7 @@ aws configure set region $EMR_AWS_REGION
 
 TEMPJSON=/tmp/out.json
 
-aws ec2 create-volume --size 10 --region us-east-1 --availability-zone $EMR_AWS_AZ --volume-type gp2 --tag-specifications 'ResourceType=volume,Tags=[{Key=purpose,Value=dss}]' > $TEMPJSON
+aws ec2 create-volume --size 10 --region us-east-1 --availability-zone $EMR_AWS_AZ --volume-type gp2 --tag-specifications 'ResourceType=volume,Tags=[{Key=purpose,Value=DNA-dss-emrmaster}]' > $TEMPJSON
 
 sleep 5
 EBS_VOL=$(jq ".VolumeId" $TEMPJSON | sed -r s/\"//g)
@@ -49,6 +46,7 @@ sleep 35
 
 INST=$(curl http://169.254.169.254/latest/meta-data/instance-id)
 echo $INST
+aws ec2 create-tags --resources $INSTID --tags Key=Name,Value="Dna Dss MasterNode"
 
 sleep 5
 BLOCK_DEVICE=/dev/xvdf
@@ -81,8 +79,24 @@ wget -O $DATAIKU_BASE/$DSS_TAR "https://cdn.downloads.dataiku.com/public/dss/$DS
 cd $DATAIKU_BASE
 tar xzf $DSS_TAR
 
+# cleanup tarfile after extraction
+[[ -d $DATAIKU_BASE/$DATAIKU_VERSION ]] && rm $DATAIKU_BASE/$DSS_TAR
+
 sudo -i $DATAIKU_BASE/$DATAIKU_VERSION/scripts/install/install-deps.sh -yes
+sudo -i $DATAIKU_BASE/$DATAIKU_VERSION/scripts/install/install-deps.sh -yes -without-java -without-python -with-r
 
 $DATAIKU_VERSION/installer.sh -d $DSS_DATA_DIR -l $DATAIKU_BASE/$LICENSE_FILENAME -p 50000
 
-$DSS_DATA_DIR/bin/dss start &
+# install Spark integration
+$DSS_DATA_DIR/bin/dssadmin install-spark-integration 
+$DSS_DATA_DIR/bin/dssadmin install-R-integration 
+
+cd ~
+sudo chown -R hadoop:hadoop $DATAIKU_BASE 
+
+
+sudo su - hadoop -c "$DSS_DATA_DIR/bin/dss start "
+
+exit 0 
+
+
