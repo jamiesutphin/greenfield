@@ -36,8 +36,9 @@ TEMPJSON=/tmp/out.json
 LATEST_SNAP=$(aws ec2 describe-snapshots --filters Name=tag:Name,Values="autosnap-Dna Dss MasterNode*" | jq " .[] | max_by(.StartTime) | .SnapshotId" | sed -r s/\"//g | sed -r s/null//g)
 [[ -z $LATEST_SNAP]] && echo "FATAL Error: No snapshot to restore." && exit 1
 aws ec2 create-volume --size 10 --snapshot-id $LATEST_SNAP  --region us-east-1 --availability-zone $EMR_AWS_AZ --volume-type gp2 --tag-specifications 'ResourceType=volume,Tags=[{Key=purpose,Value=DNA-dss-emrmaster}]' > $TEMPJSON
+echo $LATEST_SNAP
 
-sleep 5
+sleep 10
 EBS_VOL=$(jq ".VolumeId" $TEMPJSON | sed -r s/\"//g)
 echo $EBS_VOL
 #wait for ebs volume
@@ -52,6 +53,10 @@ sleep 5
 # to try more devices
 BLOCK_DEVICE=/dev/xvdf
 IS_DEVICE_IN_SERVICE=$(lsblk $BLOCK_DEVICE | grep -c "not a block device" )
+[[ $IS_DEVICE_IN_SERVICE -eq 0 ]] && echo "Device is ready for use!"
+
+sleep 5
+
 if [ $IS_DEVICE_IN_SERVICE -eq 0 ]; then
    aws ec2 attach-volume --volume-id $EBS_VOL --instance-id $INST --device $BLOCK_DEVICE
 else
@@ -62,28 +67,25 @@ else
 
 fi
 
+# wait to Attach volume
 sleep 30
 DATAIKU_BASE=/dataiku
-DSS_DATA_DIR=/dataiku/data
-sleep 5
-
-#sudo file -s $BLOCK_DEVICE
-#sudo mkfs -t xfs $BLOCK_DEVICE
 sudo mkdir $DATAIKU_BASE
 sudo mount $BLOCK_DEVICE $DATAIKU_BASE
 sleep 10
 
 # for this build, temporarily make ec2-user the owner
 # as this user runs the code
-sudo chown -R ec2-user $DATAIKU_BASE
-mkdir -p $DSS_DATA_DIR
+# sudo chown -R ec2-user $DATAIKU_BASE
 
-sleep 5
 
+DSS_DATA_DIR=/dataiku/data
 # If no backup Snap was found,
 # this is a new installation
 if [ -z $LATEST_SNAP ]; then
-
+  #sudo file -s $BLOCK_DEVICE
+  #sudo mkfs -t xfs $BLOCK_DEVICE
+  mkdir -p $DSS_DATA_DIR
   DATAIKU_VERSION=dataiku-dss-5.0.3
   LICENSE_FILENAME=license-bc-trial-0228.json
   LICENSE_FILE_INBUCKET=s3://dna-wma-dss/cf-build/$LICENSE_FILENAME
