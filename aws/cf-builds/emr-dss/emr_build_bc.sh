@@ -36,13 +36,7 @@ echo $EBS_VOL
 #wait for ebs volume
 sleep 35
 
-#wait for creation
-#EBS_VOL=
-#if [ -z $EBS_VOL ] ; then
-	EBS_VOL=$(jq ".VolumeId " $TEMPJSON | sed -r s/\"//g)
-	# EBS_VOL=$(aws ec2 describe-volumes | jq ".Volumes | .[] | select(.Tags | .[] | .Value == \"dss\" ) .VolumeId" | sed -r s/\"//g)
-#	sleep 15
-#fi
+EBS_VOL=$(jq ".VolumeId " $TEMPJSON | sed -r s/\"//g)
 
 INST=$(curl http://169.254.169.254/latest/meta-data/instance-id)
 echo $INST
