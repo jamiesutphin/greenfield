@@ -29,7 +29,7 @@ aws configure set region $EMR_AWS_REGION
 #Only Named Instance Tags get AutoSnapshots via Lambda
 INST=$(curl http://169.254.169.254/latest/meta-data/instance-id)
 echo $INST
-aws ec2 create-tags --resources $INSTID --tags Key=Name,Value="Dna Dss MasterNode"
+aws ec2 create-tags --resources $INST --tags Key=Name,Value="Dna Dss MasterNode"
 
 TEMPJSON=/tmp/out.json
 # Get latest Backup snapshot
