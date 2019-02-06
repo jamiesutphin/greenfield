@@ -9,7 +9,6 @@
 # This Bootstrap script is in the same S3 location as the CF parameter
 
 set -x
-
 sudo yum update -y
 sudo yum install jq -y
 
@@ -82,15 +81,13 @@ sudo -i $DATAIKU_BASE/$DATAIKU_VERSION/scripts/install/install-deps.sh -yes -wit
 $DATAIKU_VERSION/installer.sh -d $DSS_DATA_DIR -l $DATAIKU_BASE/$LICENSE_FILENAME -p 50000
 
 # install Spark integration
-$DSS_DATA_DIR/bin/dssadmin install-spark-integration 
-$DSS_DATA_DIR/bin/dssadmin install-R-integration 
+$DSS_DATA_DIR/bin/dssadmin install-spark-integration
+$DSS_DATA_DIR/bin/dssadmin install-R-integration
 
 cd ~
-sudo chown -R hadoop:hadoop $DATAIKU_BASE 
+sudo chown -R hadoop:hadoop $DATAIKU_BASE
 
 
 sudo su - hadoop -c "$DSS_DATA_DIR/bin/dss start "
 
-exit 0 
-
-
+exit 0
