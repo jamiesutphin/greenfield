@@ -34,7 +34,7 @@ aws ec2 create-tags --resources $INST --tags Key=Name,Value="Dna Dss MasterNode"
 TEMPJSON=/tmp/out.json
 # Get latest Backup snapshot
 LATEST_SNAP=$(aws ec2 describe-snapshots --filters Name=tag:Name,Values="autosnap-Dna Dss MasterNode*" | jq " .[] | max_by(.StartTime) | .SnapshotId" | sed -r s/\"//g | sed -r s/null//g)
-[[ -z $LATEST_SNAP]] && echo "FATAL Error: No snapshot to restore." && exit 1
+[[ -z $LATEST_SNAP ]] && echo "FATAL Error: No snapshot to restore." && exit 1
 aws ec2 create-volume --size 10 --snapshot-id $LATEST_SNAP  --region us-east-1 --availability-zone $EMR_AWS_AZ --volume-type gp2 --tag-specifications 'ResourceType=volume,Tags=[{Key=purpose,Value=DNA-dss-emrmaster}]' > $TEMPJSON
 echo $LATEST_SNAP
 
